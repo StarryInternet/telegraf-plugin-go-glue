@@ -100,6 +100,19 @@ func add_generic(measurement_ *C.char,
 	return
 }
 
+//export add_field
+func add_field(measurement_ *C.char,
+	tags_ *C.struct_tag, tags_size C.int,
+	fields_ *C.struct_field, fields_size C.int,
+	unix_sec, unix_nsec C.int64_t) {
+	measurement, fields, tags, t := add_generic(measurement_, tags_, tags_size, fields_, fields_size, unix_sec, unix_nsec)
+	if t != nil {
+		(*acc).AddFields(measurement, fields, tags, *t)
+	} else {
+		(*acc).AddFields(measurement, fields, tags)
+	}
+}
+
 //export add_gauge
 func add_gauge(measurement_ *C.char,
 	tags_ *C.struct_tag, tags_size C.int,
@@ -113,15 +126,15 @@ func add_gauge(measurement_ *C.char,
 	}
 }
 
-//export add_field
-func add_field(measurement_ *C.char,
+//export add_counter
+func add_counter(measurement_ *C.char,
 	tags_ *C.struct_tag, tags_size C.int,
 	fields_ *C.struct_field, fields_size C.int,
 	unix_sec, unix_nsec C.int64_t) {
 	measurement, fields, tags, t := add_generic(measurement_, tags_, tags_size, fields_, fields_size, unix_sec, unix_nsec)
 	if t != nil {
-		(*acc).AddFields(measurement, fields, tags, *t)
+		(*acc).AddCounter(measurement, fields, tags, *t)
 	} else {
-		(*acc).AddFields(measurement, fields, tags)
+		(*acc).AddCounter(measurement, fields, tags)
 	}
 }
