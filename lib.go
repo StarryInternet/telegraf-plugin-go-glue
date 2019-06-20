@@ -57,26 +57,32 @@ func (plugin *RustPlugin) Gather(acc_ telegraf.Accumulator) error {
 	return nil
 }
 
-//export add_field
-func add_field(measurement_ *C.char,
+type add_func func(measurement string,
+	fields map[string]interface{},
+	tags map[string]string,
+	t ...time.Time)
+
+func add_generic(measurement_ *C.char,
 	tags_ *C.struct_tag, tags_size C.int,
 	fields_ *C.struct_field, fields_size C.int,
-	unix_sec, unix_nsec C.int64_t) {
+	unix_sec, unix_nsec C.int64_t) (
+	measurement string, fields map[string]interface{},
+	tags map[string]string, timestamp *time.Time) {
 	if acc == nil {
 		log.Fatal("No accumulator was active, only call this from Gather")
 	}
-	measurement := C.GoString(measurement_)
+	measurement = C.GoString(measurement_)
 	tag_list := (*[1 << 32]C.struct_tag)(unsafe.Pointer(tags_))[:tags_size]
 	field_list := (*[1 << 32]C.struct_field)(unsafe.Pointer(fields_))[:fields_size]
 
-	tags := make(map[string]string)
+	tags = make(map[string]string)
 	for _, tag := range tag_list {
 		key := C.GoString(tag.key)
 		value := C.GoString(tag.value)
 		tags[key] = value
 	}
 
-	fields := make(map[string]interface{})
+	fields = make(map[string]interface{})
 	for _, field := range field_list {
 		key := C.GoString(field.key)
 		var value interface{}
@@ -86,11 +92,36 @@ func add_field(measurement_ *C.char,
 		}
 		fields[key] = value
 	}
+	timestamp = nil
+	if unix_sec != 0 && unix_nsec != 0 {
+		timestamp_ := time.Unix(int64(unix_sec), int64(unix_nsec))
+		timestamp = &timestamp_
+	}
+	return
+}
 
-	if unix_sec == 0 && unix_nsec == 0 {
-		(*acc).AddFields(measurement, fields, tags)
+//export add_gauge
+func add_gauge(measurement_ *C.char,
+	tags_ *C.struct_tag, tags_size C.int,
+	fields_ *C.struct_field, fields_size C.int,
+	unix_sec, unix_nsec C.int64_t) {
+	measurement, fields, tags, t := add_generic(measurement_, tags_, tags_size, fields_, fields_size, unix_sec, unix_nsec)
+	if t != nil {
+		(*acc).AddGauge(measurement, fields, tags, *t)
 	} else {
-		timestamp := time.Unix(int64(unix_sec), int64(unix_nsec))
-		(*acc).AddFields(measurement, fields, tags, timestamp)
+		(*acc).AddGauge(measurement, fields, tags)
+	}
+}
+
+//export add_field
+func add_field(measurement_ *C.char,
+	tags_ *C.struct_tag, tags_size C.int,
+	fields_ *C.struct_field, fields_size C.int,
+	unix_sec, unix_nsec C.int64_t) {
+	measurement, fields, tags, t := add_generic(measurement_, tags_, tags_size, fields_, fields_size, unix_sec, unix_nsec)
+	if t != nil {
+		(*acc).AddFields(measurement, fields, tags, *t)
+	} else {
+		(*acc).AddFields(measurement, fields, tags)
 	}
 }

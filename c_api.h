@@ -60,3 +60,8 @@ extern void add_field(char *measurment,
         struct tag *tags, int tags_size,
         struct field *fields, int fields_size,
         int64_t unix_sec, int64_t unix_nsec);
+
+extern void add_gauge(char *measurment,
+        struct tag *tags, int tags_size,
+        struct field *fields, int fields_size,
+        int64_t unix_sec, int64_t unix_nsec);
