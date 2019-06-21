@@ -22,14 +22,23 @@
 //
 // Software written by Preston Carpenter <pcarpenter@starry.com>
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 struct go_value {
     enum {
-        TYPE_INT
+        TYPE_INT,
+        TYPE_UINT,
+        TYPE_FLOAT,
+        TYPE_BOOL,
+        TYPE_STRING,
     } type_;
     union {
-        int int_;
+        int64_t int_;
+        uint64_t uint_;
+        double double_;
+        bool bool_;
+        char *string_;
     } value;
 };
 
@@ -42,9 +51,29 @@ struct field {
     struct go_value value;
 };
 
-static int get_go_value_int(struct go_value value) {
-    assert(value.type_ == TYPE_INT);
-    return value.value.int_;
+static int64_t get_go_value_int(struct go_value go_value) {
+    assert(go_value.type_ == TYPE_INT);
+    return go_value.value.int_;
+}
+
+static uint64_t get_go_value_uint(struct go_value go_value) {
+    assert(go_value.type_ == TYPE_UINT);
+    return go_value.value.uint_;
+}
+
+static double get_go_value_double(struct go_value go_value) {
+    assert(go_value.type_ == TYPE_FLOAT);
+    return go_value.value.double_;
+}
+
+static bool get_go_value_bool(struct go_value go_value) {
+    assert(go_value.type_ == TYPE_BOOL);
+    return go_value.value.bool_;
+}
+
+static char *get_go_value_string(struct go_value go_value) {
+    assert(go_value.type_ == TYPE_STRING);
+    return go_value.value.string_;
 }
 
 // Gives a sample configuration for this plugin.

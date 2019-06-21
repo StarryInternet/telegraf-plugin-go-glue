@@ -85,11 +85,7 @@ func add_generic(measurement_ *C.char,
 	fields = make(map[string]interface{})
 	for _, field := range field_list {
 		key := C.GoString(field.key)
-		var value interface{}
-		switch field.value.type_ {
-		case C.TYPE_INT:
-			value = int(C.get_go_value_int(field.value))
-		}
+		value := convert_to_go_value(field.value)
 		fields[key] = value
 	}
 	timestamp = nil
@@ -163,4 +159,20 @@ func add_histogram(measurement_ *C.char,
 	} else {
 		(*acc).AddHistogram(measurement, fields, tags)
 	}
+}
+
+func convert_to_go_value(c_value C.struct_go_value) (go_value interface{}) {
+	switch c_value.type_ {
+	case C.TYPE_INT:
+		go_value = int64(C.get_go_value_int(c_value))
+	case C.TYPE_UINT:
+		go_value = uint64(C.get_go_value_uint(c_value))
+	case C.TYPE_FLOAT:
+		go_value = float64(C.get_go_value_double(c_value))
+	case C.TYPE_BOOL:
+		go_value = bool(C.get_go_value_bool(c_value))
+	case C.TYPE_STRING:
+		go_value = C.GoString(C.get_go_value_string(c_value))
+	}
+	return
 }
