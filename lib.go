@@ -138,3 +138,16 @@ func add_counter(measurement_ *C.char,
 		(*acc).AddCounter(measurement, fields, tags)
 	}
 }
+
+//export add_summary
+func add_summary(measurement_ *C.char,
+	tags_ *C.struct_tag, tags_size C.int,
+	fields_ *C.struct_field, fields_size C.int,
+	unix_sec, unix_nsec C.int64_t) {
+	measurement, fields, tags, t := add_generic(measurement_, tags_, tags_size, fields_, fields_size, unix_sec, unix_nsec)
+	if t != nil {
+		(*acc).AddSummary(measurement, fields, tags, *t)
+	} else {
+		(*acc).AddSummary(measurement, fields, tags)
+	}
+}
