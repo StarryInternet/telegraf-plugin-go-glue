@@ -75,3 +75,8 @@ extern void add_summary(char *measurment,
         struct tag *tags, int tags_size,
         struct field *fields, int fields_size,
         int64_t unix_sec, int64_t unix_nsec);
+
+extern void add_histogram(char *measurment,
+        struct tag *tags, int tags_size,
+        struct field *fields, int fields_size,
+        int64_t unix_sec, int64_t unix_nsec);
