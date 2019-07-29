@@ -32,6 +32,7 @@ import "C"
 
 import (
 	"github.com/influxdata/telegraf"
+	"github.com/influxdata/telegraf/plugins/inputs"
 	"log"
 	"time"
 	"unsafe"
@@ -41,6 +42,10 @@ type RustPlugin struct{}
 
 var Plugin telegraf.Input = &RustPlugin{}
 var acc *telegraf.Accumulator = nil
+
+func init() {
+	inputs.Add("rust_plugin", func() telegraf.Input { return &RustPlugin{} })
+}
 
 func (plugin *RustPlugin) SampleConfig() string {
 	return C.GoString(C.sample_config())
